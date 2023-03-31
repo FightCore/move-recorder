@@ -55,5 +55,5 @@ while (true)
 }
 
 Console.WriteLine("Saving as GIF");
-new GifCreator().Create($"{folder}.gif", frames, screenToUse);
+new GifCreator().Create($"{folder}.gif", frames);
 Console.WriteLine("Saved");
