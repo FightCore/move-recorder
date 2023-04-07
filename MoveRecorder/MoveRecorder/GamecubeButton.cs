@@ -2,7 +2,7 @@
 
 namespace MoveRecorder
 {
-	public class GameCubeButton
+	public static class GameCubeButton
 	{
 		public static readonly DualShock4Button A = DualShock4Button.Circle;
 		public static readonly DualShock4Button B = DualShock4Button.Cross;
@@ -10,6 +10,7 @@ namespace MoveRecorder
 		public static readonly DualShock4Button Y = DualShock4Button.Square;
 		public static readonly DualShock4Button Z = DualShock4Button.ShoulderLeft;
 		public static readonly DualShock4Button Start = DualShock4Button.Options;
+		public static readonly DualShock4Button LoadSaveState = DualShock4Button.Share;
 		public static readonly DualShock4Button L = DualShock4Button.ThumbLeft;
 		public static readonly DualShock4Button R = DualShock4Button.ThumbRight;
 

@@ -1,26 +1,24 @@
-﻿namespace MoveRecorder
+﻿using System.Reflection;
+using MoveRecorder.Moves.Abstraction;
+
+namespace MoveRecorder
 {
 	public class MoveExecutor
 	{
-		private readonly GameCubeInputs _controller;
-
+		private readonly List<IMove> _moves;
+		public readonly IReadOnlyList<string> AvailableMoves;
 
 		public MoveExecutor(GameCubeInputs controller)
 		{
-			_controller = controller;
+			_moves = Assembly.GetExecutingAssembly().GetTypes().Where(type =>
+				!type.IsAbstract && !type.IsInterface && type.IsAssignableTo(typeof(IMove)))
+				.Select(type => (IMove)Activator.CreateInstance(type, controller)).ToList();
+			AvailableMoves = _moves.ConvertAll(move => move.Name).AsReadOnly();
 		}
 
-		public void Execute(string move)
+		public void Execute(string moveName)
 		{
-			switch (move)
-			{
-				case "usmash":
-					_controller.Move(GameCubeButton.CStickUp.Index, GameCubeButton.CStickUp.Value);
-					break;
-				default:
-					Console.Write("Issue");
-					break;
-			}
+			_moves.First(move => move.Name == moveName).Execute();
 		}
 	}
 }
