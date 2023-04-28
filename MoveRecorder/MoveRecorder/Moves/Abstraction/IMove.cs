@@ -7,4 +7,6 @@ public interface IMove
 	void Execute();
 
 	void Setup(ISetupInformation setupInformation);
+
+	void Cleanup();
 }

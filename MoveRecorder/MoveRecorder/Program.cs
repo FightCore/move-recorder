@@ -4,8 +4,6 @@ using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets.DualShock4;
 using Point = System.Drawing.Point;
 
-
-
 var baseFolder = "C:/tmp/";
 var screens = Screen.AllScreens;
 var i = 0;
@@ -84,5 +82,9 @@ foreach (var move in moveExecutor.AvailableMoves)
 
 	Console.WriteLine("Saving as GIF");
 	new GifCreator().Create($"{folder}/{move}.gif", frames);
+	foreach (var frame in frames)
+	{
+		frame.Dispose();
+	}
 	Console.WriteLine("Saved");
 }

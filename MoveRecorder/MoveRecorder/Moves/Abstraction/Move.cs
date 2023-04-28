@@ -15,4 +15,8 @@ public abstract class Move : IMove
 	public virtual void Setup(ISetupInformation setupInformation)
 	{
 	}
+
+	public virtual void Cleanup()
+	{
+	}
 }

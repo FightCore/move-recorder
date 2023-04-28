@@ -20,7 +20,7 @@ public class GifCreator
 		}
 
 		// We take the first image and call it our root, all other images will be appended as frames.
-		var gif = images[0];
+		using var gif = images[0];
 		var metadata = gif.Frames.RootFrame.Metadata.GetGifMetadata();
 		metadata.FrameDelay = frameDelay;
 
@@ -32,6 +32,7 @@ public class GifCreator
 
 			// Add the color image to the gif.
 			gif.Frames.AddFrame(image.Frames.RootFrame);
+			image.Dispose();
 		}
 
 		gif.SaveAsGif(fileName);
