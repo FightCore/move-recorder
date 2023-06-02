@@ -43,12 +43,10 @@ foreach (var move in moveExecutor.AvailableMoves)
 
 	Directory.CreateDirectory(folder);
 
-	//new RecordEnvironment(inputs).Setup();
 	Console.WriteLine("Done setting up record environment");
 
-	//inputs.Press(GameCubeButton.Start);
 	Console.WriteLine("Loading save state");
-	inputs.Press(GameCubeButton.LoadSaveState);
+	inputs.Press(GameCubeButton.LoadSaveState1);
 	Thread.Sleep(2000);
 	Console.WriteLine("Executing move");
 	moveExecutor.Execute(move);

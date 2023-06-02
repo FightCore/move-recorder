@@ -10,7 +10,6 @@ namespace MoveRecorder
 		public static readonly DualShock4Button Y = DualShock4Button.Square;
 		public static readonly DualShock4Button Z = DualShock4Button.ShoulderLeft;
 		public static readonly DualShock4Button Start = DualShock4Button.Options;
-		public static readonly DualShock4Button LoadSaveState = DualShock4Button.Share;
 		public static readonly DualShock4Button L = DualShock4Button.ThumbLeft;
 		public static readonly DualShock4Button R = DualShock4Button.ThumbRight;
 
@@ -29,5 +28,9 @@ namespace MoveRecorder
 		public static readonly (int Index, short Value) CStickDown = (2, short.MinValue);
 		public static readonly (int Index, short Value) CStickLeft = (3, short.MinValue);
 		public static readonly (int Index, short Value) CStickRight = (3, short.MaxValue);
+
+		public static readonly DualShock4Button LoadSaveState1 = DualShock4Button.Share;
+		public static readonly DualShock4Button LoadSaveState2 = DualShock4Button.Share;
+		public static readonly DualShock4Button LoadSaveState3 = DualShock4Button.Share;
 	}
 }
