@@ -40,7 +40,7 @@ public class GifCreator
 			var text = frameCount.ToString();
 
 			// Draws the text with horizontal red and blue hatching with a dash dot pattern outline.
-			image.Mutate(x => x.DrawText(text, SystemFonts.Get("Arial").CreateFont(50), Color.Red, new PointF()
+			image.Mutate(x => x.DrawText(text, SystemFonts.Get("Arial").CreateFont(50), Color.Green, new PointF()
 			{
 				Y = 10,
 				X = 10

@@ -8,7 +8,7 @@ namespace MoveRecorder.Moves.Ground
 		{
 		}
 
-		public override string Name => "jab";
+		public override string Name => "jab1";
 
 		public override void Execute()
 		{

@@ -18,7 +18,10 @@ namespace MoveRecorder
 
 		public void Execute(string moveName)
 		{
-			_moves.First(move => move.Name == moveName).Execute();
+			var move = _moves.First(move => move.Name == moveName);
+			move.Setup(null);
+			move.Execute();
+			move.Cleanup();
 		}
 	}
 }
