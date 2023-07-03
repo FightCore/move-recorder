@@ -12,6 +12,11 @@ namespace MoveRecorder.Data
 	{
 		public List<MoveData> Load(string location)
 		{
+			if (!File.Exists(location))
+			{
+				return new List<MoveData>();
+			}
+
 			using var reader = new StreamReader(location);
 			using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 			return csv.GetRecords<MoveData>().ToList();

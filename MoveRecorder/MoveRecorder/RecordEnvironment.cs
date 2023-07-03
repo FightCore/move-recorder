@@ -1,45 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Nefarius.ViGEm.Client.Targets;
-using Nefarius.ViGEm.Client.Targets.DualShock4;
-
-namespace MoveRecorder
+﻿namespace MoveRecorder
 {
-	// Mapping the PS4 controller to the GC controller
-	// I tried to keep things semi understandable.
-	public class RecordEnvironment
+	public static class RecordEnvironment
 	{
-		private const int _delay = 500;
-		private readonly GameCubeInputs _controller;
-
-		public RecordEnvironment(GameCubeInputs controller)
+		public static void Setup(GameCubeInputs controller)
 		{
-			_controller = controller;
-		}
-
-		public void Setup()
-		{
-			// Enable development/debug mode
-			_controller.Press(GameCubeButton.Start);
-			_controller.Press(GameCubeButton.DpadRight);
-			Thread.Sleep(_delay);
-			_controller.Press(GameCubeButton.DpadRight);
-			Thread.Sleep(_delay);
+			controller.FastPress(GameCubeButton.Start, false);
 
 			// Enable hitboxes
-			_controller.Hold(GameCubeButton.R);
-			_controller.Press(GameCubeButton.DpadRight);
-			Thread.Sleep(_delay);
-			_controller.Release(GameCubeButton.R);
-			Thread.Sleep(_delay);
+			controller.Hold(GameCubeButton.R);
+			for (var hudIterator = 0; hudIterator < 2; hudIterator++)
+			{
+				controller.FastPress(GameCubeButton.DpadRight);
+				Thread.Sleep(50);
+			}
 
-			// Unpause the game
-			_controller.Hold(GameCubeButton.X);
-			_controller.Press(GameCubeButton.DpadUp);
-			_controller.Release(GameCubeButton.X);
+			controller.Release(GameCubeButton.R);
+			controller.Hold(GameCubeButton.X);
+
+			// Disable hud and background
+			for (var hudIterator = 0; hudIterator < 7; hudIterator++)
+			{
+				controller.FastPress(GameCubeButton.DpadDown);
+				Thread.Sleep(50);
+			}
+
+			// Camera select
+			for (var hudIterator = 0; hudIterator < 2; hudIterator++)
+			{
+				controller.FastPress(GameCubeButton.DpadLeft);
+				Thread.Sleep(50);
+			}
+
+			controller.Release(GameCubeButton.X);
+
+			// Setup camera with zoom.
+			controller.Hold(GameCubeButton.B);
+			controller.Hold(GameCubeButton.DpadLeft);
+			controller.Hold(GameCubeButton.CStickDown.Index, GameCubeButton.CStickDown.Value);
+			Thread.Sleep(300);
+			controller.Release(GameCubeButton.CStickDown.Index);
+			controller.ReleaseDPad();
+			controller.Release(GameCubeButton.B);
+
+			// Unpause the game.
+			controller.FastPress(GameCubeButton.Start, false);
+			Thread.Sleep(50);
+
+			// Airdodge down to land on the ground (counters the 0-Grav mode)
+			controller.Hold(GameCubeButton.Down.Index, GameCubeButton.Down.Value);
+			controller.Press(GameCubeButton.R, false);
+			controller.Release(GameCubeButton.Down.Index);
+			controller.Reset();
+			// Sleep for a long time to allow the character to land.
+			Thread.Sleep(10000);
+
+			// Pause the game again to setup frame advance
+			controller.Press(GameCubeButton.Start, false);
+			Thread.Sleep(100);
+
+			// Save to the second savestate slot.
+			controller.Press(GameCubeButton.SaveSaveState2, false);
+			Thread.Sleep(100);
 		}
 	}
 }

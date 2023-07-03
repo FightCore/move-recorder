@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MoveRecorder
+﻿namespace MoveRecorder
 {
 	public class Character
 	{
@@ -12,7 +6,7 @@ namespace MoveRecorder
 
 		public List<CharacterSelectMovement> SelectMovement { get; set; }
 
-		public Character(string name, int down, int right)
+		public Character(string name, int down, int right, bool zPress = false)
 		{
 			Name = name;
 			SelectMovement = new List<CharacterSelectMovement>();
@@ -25,6 +19,11 @@ namespace MoveRecorder
 			for (var i = 0; i < right; i++)
 			{
 				SelectMovement.Add(CharacterSelectMovement.Right);
+			}
+
+			if (zPress)
+			{
+				SelectMovement.Add(CharacterSelectMovement.Z);
 			}
 		}
 	}

@@ -4,7 +4,7 @@ using MoveRecorder.Data;
 using Nefarius.ViGEm.Client;
 using Point = System.Drawing.Point;
 
-var baseFolder = "C:/tmp/";
+var baseFolder = "C:/tmp/recorder/";
 var screens = Screen.AllScreens;
 var i = 0;
 foreach (var screen in screens)
@@ -16,8 +16,6 @@ Console.WriteLine("Choose an device");
 var decision = Console.ReadLine();
 var screenToUse = screens[Convert.ToInt32(decision)];
 
-
-
 Console.WriteLine("Connecting controller");
 
 var client = new ViGEmClient();
@@ -25,6 +23,7 @@ var ds4 = client.CreateDualShock4Controller();
 ds4.Connect();
 
 var inputs = new GameCubeInputs(ds4);
+var characterSelectMover = new CharacterSelectMover(inputs);
 
 Console.WriteLine("Please setup the move within Dolphin, ensure the first frame of the move is visible and the game is paused using debug mode.");
 Console.WriteLine("Please configure the controller in Dolphin");
@@ -40,28 +39,8 @@ foreach (var character in Characters.AllCharacters)
 	Thread.Sleep(20);
 	inputs.Release(GameCubeButton.B);
 
-	foreach (var operation in character.SelectMovement)
-	{
-		switch (operation)
-		{
-			case CharacterSelectMovement.Down:
-				inputs.Hold(GameCubeButton.Down.Index, GameCubeButton.Down.Value);
-				Thread.Sleep(100);
-				inputs.Release(GameCubeButton.Down.Index);
-				break;
-			case CharacterSelectMovement.Right:
-				inputs.Hold(GameCubeButton.Right.Index, GameCubeButton.Right.Value);
-				Thread.Sleep(90);
-				inputs.Release(GameCubeButton.Right.Index);
-				break;
-			case CharacterSelectMovement.Left:
-				inputs.Hold(GameCubeButton.Left.Index, GameCubeButton.Left.Value);
-				Thread.Sleep(90);
-				inputs.Release(GameCubeButton.Left.Index);
-				break;
+	characterSelectMover.Execute(character.SelectMovement);
 
-		}
-	}
 	inputs.Hold(GameCubeButton.A);
 	Thread.Sleep(20);
 	inputs.Release(GameCubeButton.A);
@@ -74,78 +53,20 @@ foreach (var character in Characters.AllCharacters)
 	inputs.FastPress(GameCubeButton.DpadDown);
 	Thread.Sleep(1000);
 
-	foreach (var operation in new List<CharacterSelectMovement>()
-	         {
+	// Select the stage using preset moves.
+	characterSelectMover.Execute(new List<CharacterSelectMovement>()
+	{
 		CharacterSelectMovement.Up, CharacterSelectMovement.Up, CharacterSelectMovement.Up,
 		CharacterSelectMovement.Left, CharacterSelectMovement.Left
-			 })
-	{
-		switch (operation)
-		{
-			case CharacterSelectMovement.Up:
-				inputs.Hold(GameCubeButton.Up.Index, GameCubeButton.Up.Value);
-				Thread.Sleep(100);
-				inputs.Release(GameCubeButton.Up.Index);
-				break;
-			case CharacterSelectMovement.Left:
-				inputs.Hold(GameCubeButton.Left.Index, GameCubeButton.Left.Value);
-				Thread.Sleep(100);
-				inputs.Release(GameCubeButton.Left.Index);
-				break;
-
-		}
-	}
+	});
 
 	inputs.FastPress(GameCubeButton.A, false);
-	Thread.Sleep(5000);
-	inputs.FastPress(GameCubeButton.Start, false);
-	// Enable hitboxes
-	inputs.Hold(GameCubeButton.R);
-	for (var hudIterator = 0; hudIterator < 2; hudIterator++)
-	{
-		inputs.FastPress(GameCubeButton.DpadRight);
-		Thread.Sleep(50);
+	Thread.Sleep(3000);
 
-	}
-	inputs.Release(GameCubeButton.R);
-	inputs.Hold(GameCubeButton.X);
-	// Disable hud and background
-	for (var hudIterator = 0; hudIterator < 7; hudIterator++)
-	{
-		inputs.FastPress(GameCubeButton.DpadDown);
-		Thread.Sleep(50);
-
-	}
-	// Camera select
-	for (var hudIterator = 0; hudIterator < 2; hudIterator++)
-	{
-		inputs.FastPress(GameCubeButton.DpadLeft);
-		Thread.Sleep(50);
-
-	}
-	inputs.Release(GameCubeButton.X);
-	inputs.Hold(GameCubeButton.B);
-	inputs.Hold(GameCubeButton.DpadLeft);
-	inputs.Hold(GameCubeButton.CStickDown.Index, GameCubeButton.CStickDown.Value);
-	Thread.Sleep(300);
-	inputs.Release(GameCubeButton.CStickDown.Index);
-	inputs.ReleaseDPad();
-	inputs.Release(GameCubeButton.B);
-	inputs.FastPress(GameCubeButton.Start, false);
-	Thread.Sleep(50);
-	inputs.Hold(GameCubeButton.Down.Index, GameCubeButton.Down.Value);
-	inputs.Press(GameCubeButton.R, false);
-	inputs.Release(GameCubeButton.Down.Index);
-	inputs.Reset();
-	Thread.Sleep(10000);
-	inputs.Press(GameCubeButton.Start, false);
-	Thread.Sleep(100);
-	inputs.Press(GameCubeButton.SaveSaveState2, false);
-	Thread.Sleep(100);
-
+	RecordEnvironment.Setup(inputs);
 
 	Console.WriteLine("Done with setup");
-	var moves = new CsvLoader().Load($@"C://tmp/exports/{character.Name}/moves.csv");
+	var moves = new CsvLoader().Load($"C://tmp/exports/{character.Name}/moves.csv");
 
 	var moveExecutor = new MoveExecutor(inputs);
 	foreach (var move in moveExecutor.AvailableMoves)
@@ -166,7 +87,6 @@ foreach (var character in Characters.AllCharacters)
 
 		Console.WriteLine($"Recording {move}");
 
-
 		var folder = $"{baseFolder}{character.Name}/{move}/";
 
 		Directory.CreateDirectory(folder);
@@ -180,8 +100,8 @@ foreach (var character in Characters.AllCharacters)
 		Console.WriteLine("Done setting up record environment");
 
 		Console.WriteLine("Loading save state");
-		inputs.Press(GameCubeButton.SaveSaveState2);
-		Thread.Sleep(2000);
+		inputs.Press(GameCubeButton.LoadSaveState2);
+		Thread.Sleep(1000);
 		Console.WriteLine("Executing move");
 		moveExecutor.Execute(move);
 
@@ -204,7 +124,7 @@ foreach (var character in Characters.AllCharacters)
 			frameCounter++;
 
 			inputs.Press(GameCubeButton.Z);
-			Thread.Sleep(200);
+			Thread.Sleep(20);
 
 			if (frameCounter >= moveData.TotalFrames)
 			{
@@ -221,5 +141,3 @@ foreach (var character in Characters.AllCharacters)
 		Console.WriteLine("Saved");
 	}
 }
-
-
