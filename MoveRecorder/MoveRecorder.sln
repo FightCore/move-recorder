@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoveRecorder", "MoveRecorder\MoveRecorder.csproj", "{DA93FA15-B42B-41B6-AD94-DBC7D5017F27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControllerSetup", "ControllerSetup\ControllerSetup.csproj", "{240ED968-711B-4406-8452-41D465C019CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ControllerSetup", "ControllerSetup\ControllerSetup.csproj", "{240ED968-711B-4406-8452-41D465C019CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

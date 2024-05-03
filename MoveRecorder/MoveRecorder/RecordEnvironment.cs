@@ -18,7 +18,7 @@
 			controller.Hold(GameCubeButton.X);
 
 			// Disable hud and background
-			for (var hudIterator = 0; hudIterator < 7; hudIterator++)
+			for (var hudIterator = 0; hudIterator < 3; hudIterator++)
 			{
 				controller.FastPress(GameCubeButton.DpadDown);
 				Thread.Sleep(50);
@@ -37,10 +37,15 @@
 			controller.Hold(GameCubeButton.B);
 			controller.Hold(GameCubeButton.DpadLeft);
 			controller.Hold(GameCubeButton.CStickDown.Index, GameCubeButton.CStickDown.Value);
-			Thread.Sleep(300);
+			Thread.Sleep(150);
 			controller.Release(GameCubeButton.CStickDown.Index);
 			controller.ReleaseDPad();
 			controller.Release(GameCubeButton.B);
+
+			// Set up action display
+			controller.Hold(GameCubeButton.Y);
+			controller.FastPress(GameCubeButton.DpadDown);
+			controller.Release(GameCubeButton.Y);
 
 			// Unpause the game.
 			controller.FastPress(GameCubeButton.Start, false);

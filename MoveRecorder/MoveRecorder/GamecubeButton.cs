@@ -32,6 +32,5 @@ namespace MoveRecorder
 		public static readonly DualShock4Button LoadSaveState1 = DualShock4Button.Share;
 		public static readonly DualShock4Button LoadSaveState2 = DualShock4Button.TriggerLeft;
 		public static readonly DualShock4Button SaveSaveState2 = DualShock4Button.TriggerRight;
-		public static readonly DualShock4Button LoadSaveState3 = DualShock4Button.Share;
 	}
 }

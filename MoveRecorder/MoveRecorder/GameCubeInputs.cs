@@ -39,7 +39,6 @@ namespace MoveRecorder
 		{
 			Press(GameCubeButton.Z, false);
 		}
-
 		public void Press(DualShock4DPadDirection dpadDirection, bool frameAdvance = true)
 		{
 			_controller.SetDPadDirection(dpadDirection);
@@ -60,7 +59,7 @@ namespace MoveRecorder
 		public void FastPress(DualShock4DPadDirection dpadDirection)
 		{
 			_controller.SetDPadDirection(dpadDirection);
-			Thread.Sleep(100);
+			Thread.Sleep(12);
 			_controller.SetDPadDirection(GameCubeButton.DpadNeutral);
 		}
 
