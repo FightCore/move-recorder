@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp.Drawing.Processing;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Processing;
 using static System.Windows.Forms.Design.AxImporter;
 using Brushes = System.Drawing.Brushes;
 using Color = SixLabors.ImageSharp.Color;

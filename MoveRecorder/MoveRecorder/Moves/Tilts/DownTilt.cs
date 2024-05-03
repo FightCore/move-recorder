@@ -17,7 +17,7 @@ namespace MoveRecorder.Moves.Tilts
 		public override void Execute()
 		{
 			Controller.TiltDown(GameCubeButton.Down.Index);
-			Controller.Press(GameCubeButton.Z, false);
+			Controller.FrameAdvance();
 			Controller.Press(GameCubeButton.A);
 			Controller.Release(GameCubeButton.Down.Index);
 		}

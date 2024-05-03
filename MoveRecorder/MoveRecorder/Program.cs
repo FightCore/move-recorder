@@ -1,25 +1,25 @@
 ﻿using System.Drawing.Imaging;
-using System.Security.Cryptography.Pkcs;
-using IronOcr;
 using MoveRecorder;
 using MoveRecorder.Data;
-using MoveRecorder.Moves.Abstraction;
 using Nefarius.ViGEm.Client;
+using Serilog;
 using Point = System.Drawing.Point;
+
+Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
 var baseFolder = "C:/tmp/recorder/";
 var screens = Screen.AllScreens;
 var i = 0;
 foreach (var screen in screens)
 {
-	Console.WriteLine($"{i}: {screen.DeviceName} {screen.Bounds} {screen.Primary}");
+	Log.Information($"{i}: {screen.DeviceName} {screen.Bounds} {screen.Primary}");
 	i++;
 }
-Console.WriteLine("Choose an device");
+Log.Information("Choose an device");
 var decision = Console.ReadLine();
 var screenToUse = screens[Convert.ToInt32(decision)];
 
-Console.WriteLine("Connecting controller");
+Log.Information("Connecting controller");
 
 var client = new ViGEmClient();
 var ds4 = client.CreateDualShock4Controller();
@@ -28,8 +28,8 @@ var inputs = new GameCubeInputs(ds4);
 
 var characterSelectMover = new CharacterSelectMover(inputs);
 inputs.Reset();
-Console.WriteLine("Please setup the move within Dolphin, ensure the first frame of the move is visible and the game is paused using debug mode.");
-Console.WriteLine("Please configure the controller in Dolphin");
+Log.Information("Please setup the move within Dolphin, ensure the first frame of the move is visible and the game is paused using debug mode.");
+Log.Information("Please configure the controller in Dolphin");
 Console.ReadLine();
 inputs.Reset();
 
@@ -54,7 +54,6 @@ inputs.Reset();
 //	Thread.Sleep(100);
 //}
 
-
 foreach (var character in Characters.AllCharacters)
 {
 	var moves = new CsvLoader().Load($"C://tmp/exports/{character.Name}/moves.csv");
@@ -76,49 +75,26 @@ foreach (var character in Characters.AllCharacters)
 			return true;
 		}
 
-		return !Directory.GetFiles(folder).Any();
+		return Directory.GetFiles(folder).Length == 0;
 	}).ToList();
 
 	if (movesToExecute.Count == 0)
 	{
-		Console.WriteLine("no moves to perform, skipping");
+		Log.Information("no moves to perform, skipping");
 		continue;
 	}
 
-	inputs.Press(GameCubeButton.LoadSaveState1, false);
-	Thread.Sleep(200);
-	inputs.Hold(GameCubeButton.B);
-	Thread.Sleep(20);
-	inputs.Release(GameCubeButton.B);
-
+	characterSelectMover.Reset();
 	characterSelectMover.Execute(character.SelectMovement);
-
-	inputs.Hold(GameCubeButton.A);
-	Thread.Sleep(20);
-	inputs.Release(GameCubeButton.A);
-	Console.WriteLine(character.Name);
-	inputs.Hold(GameCubeButton.Start);
-	Thread.Sleep(2000);
-	inputs.Release(GameCubeButton.Start);
-	Thread.Sleep(2000);
-
-	// Was previously used to toggle 20xx pages, now this is done when creating the savestate
-	//inputs.FastPress(GameCubeButton.DpadDown);
-	//Thread.Sleep(500);
-
-	// Select the stage using preset moves.
-	characterSelectMover.Execute(new List<CharacterSelectMovement>()
-	{
-		CharacterSelectMovement.Up, CharacterSelectMovement.Up, CharacterSelectMovement.Up,
-		CharacterSelectMovement.Left, CharacterSelectMovement.Left
-	});
-
-	inputs.FastPress(GameCubeButton.A, false);
+	characterSelectMover.GoToStageSelect();
+	characterSelectMover.SelectStage();
+	// Wait for a while to ensure the stage and everything else is loaded.
 	Thread.Sleep(3000);
 
+	// Sets up the recording environment, including a save to SaveState slot 2
 	RecordEnvironment.Setup(inputs);
 
-	Console.WriteLine("Done with setup");
+	Log.Information("Done setting up record environment");
 
 	foreach (var move in movesToExecute)
 	{
@@ -126,17 +102,17 @@ foreach (var character in Characters.AllCharacters)
 		var moveData = moves.FirstOrDefault(storedMove => storedMove.NormalizedName == move);
 		if (moveData == null)
 		{
-			Console.WriteLine($"Could not find move {move}");
+			Log.Information($"Could not find move {move}");
 			continue;
 		}
 
 		if (moveData.TotalFrames == null || moveData.TotalFrames == 0)
 		{
-			Console.WriteLine($"Frames unknown for move {move}");
+			Log.Information($"Frames unknown for move {move}");
 			continue;
 		}
 
-		Console.WriteLine($"Recording {move}");
+		Log.Information($"Recording {move}");
 
 		var folder = $"{baseFolder}{character.Name}/{move}/";
 
@@ -144,91 +120,55 @@ foreach (var character in Characters.AllCharacters)
 
 		if (Directory.GetFiles(folder).Any())
 		{
-			Console.WriteLine("Skipping move as its already there");
+			Log.Information("Skipping move as its already there");
 			continue;
 		}
 
-		Console.WriteLine("Done setting up record environment");
-
-		Console.WriteLine("Loading save state");
+		// Reload second save state slot to the clean recording environment
+		Log.Information("Loading save state");
 		inputs.Press(GameCubeButton.LoadSaveState2);
 		Thread.Sleep(1000);
-		Console.WriteLine("Executing move");
+		Log.Information("Executing move");
 		moveExecutor.Execute(move);
-
-		var frames = new List<Bitmap>();
 
 		// Frame count starts at 1 to respect human counting.
 		var frameCounter = 1;
-		await using (var textFile = new StreamWriter(folder + "text.csv"))
-		{
-			await textFile.WriteLineAsync("frame;text");
+		var frame = new Frame(screenToUse.Bounds.Width, screenToUse.Bounds.Height, screenToUse.Bounds.Left, screenToUse.Bounds.Top,
+		screenToUse.Bounds.Size);
 
-			while (true)
+		while (frameCounter < moveData.TotalFrames * 2)
+		{
+			for (var j = 0; j < 2; j++)
 			{
-				for (var j = 0; j < 2; j++)
+				var fileName = $"{folder}{frameCounter:D3}.png";
+				frame.Save(fileName);
+
+				inputs.FrameAdvance();
+				inputs.Hold(GameCubeButton.X);
+
+				if (j == 0)
 				{
-					var fileName = $"{folder}{frameCounter:D3}-{j}.png";
-					var bitmap = new Bitmap(screenToUse.Bounds.Width, screenToUse.Bounds.Height);
-					using (var g = Graphics.FromImage(bitmap))
+					// Disable hud and background
+					for (var hudIterator = 0; hudIterator < 3; hudIterator++)
 					{
-						g.CopyFromScreen(new Point(screenToUse.Bounds.Left, screenToUse.Bounds.Top), Point.Empty,
-							screenToUse.Bounds.Size);
+						inputs.FastPress(GameCubeButton.DpadDown);
+						Thread.Sleep(50);
 					}
-
-					var ocr = new IronTesseract();
-
-					using (var ocrInput = new OcrInput())
-					{
-						ocrInput.Add(bitmap);
-						var result = await ocr.ReadAsync(ocrInput);
-						await textFile.WriteLineAsync(
-							$"{frameCounter};{string.Join(',', result.Words.Select(word => word.Text))}");
-					}
-
-					bitmap.Save(fileName, ImageFormat.Png);
-
-					frames.Add(bitmap);
-					Console.WriteLine($"Taken screenshot of frame {frameCounter} {j}");
-					inputs.FrameAdvance();
-					inputs.Hold(GameCubeButton.X);
-					if (j == 0)
-					{
-						// Disable hud and background
-						for (var hudIterator = 0; hudIterator < 3; hudIterator++)
-						{
-							inputs.FastPress(GameCubeButton.DpadDown);
-							Thread.Sleep(50);
-						}
-					}
-					else
-					{
-						// Disable hud and background
-						for (var hudIterator = 0; hudIterator < 1; hudIterator++)
-						{
-							inputs.FastPress(GameCubeButton.DpadDown);
-							Thread.Sleep(50);
-						}
-					}
-					inputs.Release(GameCubeButton.X);
 				}
-
+				else
+				{
+					// Disable hud and background
+					for (var hudIterator = 0; hudIterator < 1; hudIterator++)
+					{
+						inputs.FastPress(GameCubeButton.DpadDown);
+						Thread.Sleep(50);
+					}
+				}
+				inputs.Release(GameCubeButton.X);
 				frameCounter++;
-				Thread.Sleep(20);
-
-				if (frameCounter >= moveData.TotalFrames)
-				{
-					break;
-				}
 			}
-		}
 
-		Console.WriteLine("Saving as GIF");
-		new GifCreator().Create($"{folder}/{move}.gif", frames);
-		foreach (var frame in frames)
-		{
-			frame.Dispose();
+			Thread.Sleep(20);
 		}
-		Console.WriteLine("Saved");
 	}
 }
