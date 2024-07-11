@@ -25,9 +25,9 @@ namespace MoveRecorder
 		public void Save(string fileName)
 		{
 			var bitmap = new Bitmap(_width, _height);
-			using (var g = Graphics.FromImage(bitmap))
+			using (var graphics = Graphics.FromImage(bitmap))
 			{
-				g.CopyFromScreen(new Point(_left, _top), Point.Empty,
+				graphics.CopyFromScreen(new Point(_left, _top), Point.Empty,
 					_size);
 			}
 
